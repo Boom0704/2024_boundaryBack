@@ -1,45 +1,47 @@
 package org.example.boundaryback.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.annotation.web.configurers.LogoutConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity // 메서드 보안 활성화
 public class SecurityConfig {
 
-  @Autowired
-  private CorsConfigProperties corsConfigProperties;
+  @Value("${cors.allowed.origins}")
+  private String[] allowedOrigins;
 
-  @Autowired
-  private RestAuthenticationEntryPoint restAuthenticationEntryPoint;
+  private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
+
+  public SecurityConfig(RestAuthenticationEntryPoint restAuthenticationEntryPoint) {
+    this.restAuthenticationEntryPoint = restAuthenticationEntryPoint;
+  }
 
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
-    configuration.setAllowedOrigins(corsConfigProperties.getAllowedOrigins());
-    configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-    configuration.setAllowedHeaders(Collections.singletonList("*"));
+    configuration.setAllowedOrigins(Arrays.asList(allowedOrigins));
+    configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
+    configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type"));
     configuration.setAllowCredentials(true);
+    configuration.setMaxAge(3600L);
 
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", configuration);
@@ -49,15 +51,18 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
-        .csrf(AbstractHttpConfigurer::disable) // CSRF 비활성화 (필요에 따라 조정)
+        .csrf(AbstractHttpConfigurer::disable) // CSRF 비활성화
         .cors(cors -> cors.configurationSource(corsConfigurationSource()))
         .sessionManagement(session -> session
-            .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)) // 세션 생성 정책 설정
+            .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/users/signup", "/users/signin", "/users/check").permitAll() // 퍼블릭 엔드포인트 설정
-            .anyRequest().authenticated()) // 나머지 모든 요청은 인증 필요
+            // 정적 리소스는 인증 없이 접근 가능하게 설정
+            .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
+            // 특정 엔드포인트는 인증 없이 접근 가능하게 설정
+            .requestMatchers("/users/signup", "/users/signin", "/users/check", "/users/sessionCheck", "/common/create-test-file").permitAll()
+            .anyRequest().authenticated())
         .formLogin(AbstractHttpConfigurer::disable) // Spring Security의 기본 로그인 폼 비활성화
-        .logout(LogoutConfigurer::permitAll)
+//        .logout(logout -> logout.permitAll())
         .exceptionHandling(exception -> exception
             .authenticationEntryPoint(restAuthenticationEntryPoint)); // 401 응답 설정
 
