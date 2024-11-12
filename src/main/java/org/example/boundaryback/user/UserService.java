@@ -92,4 +92,30 @@ public class UserService implements UserDetailsService {
   public Optional<User> getUserByUsername(String username) {
     return userRepository.findByUsernameAndIsActiveTrue(username);
   }
+
+  public Optional<String> getUserProfileImageUrlByUsername(String username) {
+    return userRepository.findByUsername(username).map(User::getProfilePictureUrl);
+  }
+
+  // UserService.java
+  public void updateUser(Long id, UserUpdateRequestDTO updateRequest) {
+    User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+
+    // Update fields if present
+    if (updateRequest.getUsername() != null) {
+      user.setUsername(updateRequest.getUsername());
+    }
+    if (updateRequest.getPassword() != null) {
+      user.setPassword(passwordEncoder.encode(updateRequest.getPassword()));
+    }
+    if (updateRequest.getProfilePictureUrl() != null) {
+      user.setProfilePictureUrl(updateRequest.getProfilePictureUrl());
+    }
+
+    userRepository.save(user);
+  }
+
+  public Optional<User> findUserById(Long id) {
+    return userRepository.findById(id);
+  }
 }

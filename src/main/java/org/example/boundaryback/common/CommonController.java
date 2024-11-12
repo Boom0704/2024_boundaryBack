@@ -27,7 +27,6 @@ public class CommonController {
   public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
     String uploadPath = commonService.saveFile(file);
     if (uploadPath != null) {
-      // 동적 URL 생성
       String fileUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
           .path("/common/file/")
           .path(uploadPath)

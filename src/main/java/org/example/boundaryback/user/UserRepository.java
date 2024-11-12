@@ -14,4 +14,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
   // 모든 활성화된 사용자 조회
   List<User> findByIsActiveTrue();
+
+  Optional<User> findByUsername(String username);
 }

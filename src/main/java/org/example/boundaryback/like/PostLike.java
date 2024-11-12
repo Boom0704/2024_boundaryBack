@@ -26,4 +26,11 @@ public class PostLike {
 
   // 좋아요 여부
   private boolean liked = true;
+
+  // 생성자 추가: Post, User, liked 필드를 받는 생성자
+  public PostLike(Post post, User user, boolean liked) {
+    this.post = post;
+    this.user = user;
+    this.liked = liked;
+  }
 }

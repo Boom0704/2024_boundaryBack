@@ -176,4 +176,31 @@ public class UserController {
     SecurityContextHolder.clearContext();
     return ResponseEntity.ok("Logout successful!");
   }
+
+  @GetMapping("/{username}/profile-image")
+  public ResponseEntity<String> getUserProfileImage(@PathVariable String username) {
+    Optional<String> profileImageUrl = userService.getUserProfileImageUrlByUsername(username);
+    if (profileImageUrl.isPresent()) {
+      return ResponseEntity.ok(profileImageUrl.get());
+    } else {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Profile image not found for user with username: " + username);
+    }
+  }
+
+  // 사용자 정보 업데이트
+  @PutMapping("/{id}/update")
+  public ResponseEntity<String> updateUser(@PathVariable Long id, @RequestBody UserUpdateRequestDTO updateRequest) {
+    try {
+      System.out.println("Update request received for user ID: " + id);
+      System.out.println("Username: " + updateRequest.getUsername());
+      System.out.println("Password: " + updateRequest.getPassword());
+      System.out.println("Profile Picture URL: " + updateRequest.getProfilePictureUrl());
+
+      userService.updateUser(id, updateRequest);
+      return ResponseEntity.ok("User updated successfully!");
+    } catch (Exception e) {
+      e.printStackTrace(); // 예외 출력
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("User update failed: " + e.getMessage());
+    }
+  }
 }
