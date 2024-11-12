@@ -3,6 +3,8 @@ package org.example.boundaryback.comment;
 import org.example.boundaryback.post.Post;
 import org.example.boundaryback.post.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -28,8 +30,9 @@ public class CommentService {
     return commentRepository.findById(id).filter(Comment::isActive);
   }
 
-  public List<Comment> getCommentsByPost(Post post) {
-    return commentRepository.findByPostAndIsActiveTrue(post);
+  public List<Comment> getCommentsByPost3(Post post) {
+    Pageable pageable = PageRequest.of(0, 3); // 첫 번째 페이지, 3개 항목
+    return commentRepository.findTop3ByPostAndIsActiveTrueOrderByCreatedAtDesc(post, pageable);
   }
 
   public Comment updateComment(Comment comment) {
@@ -41,5 +44,9 @@ public class CommentService {
       comment.setActive(false);
       commentRepository.save(comment);
     });
+  }
+
+  public long countActiveCommentsByPost(Post post) {
+    return commentRepository.countActiveCommentsByPost(post);
   }
 }

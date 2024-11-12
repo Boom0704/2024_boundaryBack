@@ -4,26 +4,38 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.example.boundaryback.post.Post;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Hashtag {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @EqualsAndHashCode.Include
   private Long id;
 
   @Column(unique = true, nullable = false)
   private String name;
 
-  @ManyToMany(mappedBy = "hashtags")
-  private Set<Post> posts;
+  @ManyToMany(mappedBy = "hashtags", fetch = FetchType.LAZY)
+  private Set<Post> posts = new HashSet<>();
 
+  // 생성자: 이름 필드만 필요로 할 때 사용
   public Hashtag(String name) {
     this.name = name;
+  }
+
+  // toString을 id와 name만 포함하도록 설정해 순환 참조 문제 방지
+  @Override
+  public String toString() {
+    return "Hashtag{" +
+        "id=" + id +
+        ", name='" + name + '\'' +
+        '}';
   }
 }

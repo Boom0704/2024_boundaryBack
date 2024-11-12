@@ -1,9 +1,13 @@
 package org.example.boundaryback.post;
 
-import org.example.boundaryback.user.User;
-import org.example.boundaryback.hashtag.Hashtag;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.example.boundaryback.comment.Comment;
+import org.example.boundaryback.hashtag.Hashtag;
+import org.example.boundaryback.user.User;
 
 import java.util.Date;
 import java.util.List;
@@ -62,4 +66,7 @@ public class Post {
   protected void onUpdate() {
     this.updatedAt = new Date();
   }
+
+  @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  private List<Comment> comments;
 }
