@@ -63,6 +63,39 @@ public class CommentController {
     return ResponseEntity.ok(response);
   }
 
+  @PreAuthorize("isAuthenticated()")
+  @PostMapping("/detail")
+  public ResponseEntity<Map<String, Object>> createCommentDetail(@RequestBody CommentRequestDTO commentRequestDTO) {
+    // 댓글 작성자 및 게시물 정보 설정
+    User author = userService.findUserById(commentRequestDTO.getAuthorId())
+        .orElseThrow(() -> new IllegalArgumentException("Invalid author ID"));
+    Post post = postService.getPostById(commentRequestDTO.getPostId())
+        .orElseThrow(() -> new IllegalArgumentException("Invalid post ID"));
+
+    Comment comment = new Comment();
+    comment.setAuthor(author);
+    comment.setPost(post);
+    comment.setContent(commentRequestDTO.getContent());
+
+    // 댓글 생성
+    Comment createdComment = commentService.createComment(comment);
+
+    // 활성 댓글 리스트 가져오기
+    List<CommentDTO> activeComments = commentService.getCommentsByPost(post).stream()
+        .map(CommentDTO::new)
+        .collect(Collectors.toList());
+
+    // 활성 댓글 개수 가져오기
+    long activeCommentsCount = commentService.countActiveCommentsByPost(post);
+
+    // 결과 맵으로 반환
+    Map<String, Object> response = new HashMap<>();
+    response.put("comments", activeComments);
+    response.put("activeCommentsCount", activeCommentsCount);
+
+    return ResponseEntity.ok(response);
+  }
+
 
   // 단일 댓글 조회
   @PreAuthorize("permitAll()")

@@ -1,11 +1,13 @@
 package org.example.boundaryback.user;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import org.example.boundaryback.comment.Comment;
 import org.example.boundaryback.post.Post;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -51,13 +53,14 @@ public class User {
   private Date updatedAt = new Date();
 
   // 친구 관계 설정
-  @ManyToMany
+  @ManyToMany(fetch = FetchType.LAZY)
   @JoinTable(
       name = "user_friends",
       joinColumns = @JoinColumn(name = "user_id"),
       inverseJoinColumns = @JoinColumn(name = "friend_id")
   )
-  private Set<User> friends;
+  @JsonIgnoreProperties({"friends", "likedPosts", "likedComments"})
+  private Set<User> friends = new HashSet<>();
 
   // 좋아요 관계 설정
   @ManyToMany(mappedBy = "likes")

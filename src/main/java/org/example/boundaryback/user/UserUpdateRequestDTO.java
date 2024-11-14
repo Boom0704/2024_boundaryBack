@@ -1,32 +1,15 @@
 package org.example.boundaryback.user;
 
+import lombok.Data;
+
+@Data
 public class UserUpdateRequestDTO {
   private String username;
   private String password;
   private String profilePictureUrl;
-
-  // Getters and Setters
-  public String getUsername() {
-    return username;
-  }
-
-  public void setUsername(String username) {
-    this.username = username;
-  }
-
-  public String getPassword() {
-    return password;
-  }
-
-  public void setPassword(String password) {
-    this.password = password;
-  }
-
-  public String getProfilePictureUrl() {
-    return profilePictureUrl;
-  }
-
-  public void setProfilePictureUrl(String profilePictureUrl) {
-    this.profilePictureUrl = profilePictureUrl;
-  }
+  private String bio;  // 추가
+  private String email; // 추가
+  private String visibility; // 추가
+  private String website;
+  private Boolean active;
 }

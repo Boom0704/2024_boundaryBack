@@ -7,6 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,5 +49,9 @@ public class CommentService {
 
   public long countActiveCommentsByPost(Post post) {
     return commentRepository.countActiveCommentsByPost(post);
+  }
+
+  public List<Comment> getCommentsByPost(Post post) {
+    return commentRepository.findByPostAndIsActiveTrueOrderByCreatedAtAsc(post);
   }
 }
