@@ -1,5 +1,6 @@
 package org.example.boundaryback.hashtag;
 
+import org.example.boundaryback.post.Post;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,5 +26,9 @@ public class HashtagService {
       hashtags.add(hashtag);
     }
     return hashtags;
+  }
+
+  public Set<Hashtag> getHashtagsForPost(Post post) {
+    return hashtagRepository.findByPosts(post);  // Post에 연결된 해시태그 목록 조회
   }
 }

@@ -10,9 +10,11 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -111,11 +113,51 @@ public class UserService implements UserDetailsService {
     if (updateRequest.getProfilePictureUrl() != null) {
       user.setProfilePictureUrl(updateRequest.getProfilePictureUrl());
     }
+    if (updateRequest.getBio() != null) {  // bio 추가
+      user.setBio(updateRequest.getBio());
+    }
+    if (updateRequest.getEmail() != null) {  // email 추가
+      user.setEmail(updateRequest.getEmail());
+    }
+    if (updateRequest.getVisibility() != null) {  // visibility 추가
+      user.setVisibility(ProfileVisibility.valueOf(updateRequest.getVisibility()));
+    }
+    if (updateRequest.getWebsite() != null) {  // email 추가
+      user.setWebsite(updateRequest.getWebsite());
+    }
+    if (updateRequest.getActive() != null) {  // visibility 추가
+      user.setActive(updateRequest.getActive());
+    }
 
     userRepository.save(user);
   }
 
   public Optional<User> findUserById(Long id) {
     return userRepository.findById(id);
+  }
+
+  public Set<User> getFriendsByUserId(Long userId) {
+    User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+    return user.getFriends();
+  }
+
+  @Transactional
+  public void addFriend(String senderUsername, String receiverUsername) {
+    // UserService에서 username으로 유저를 조회
+    User sender = userRepository.findByUsername(senderUsername)
+        .orElseThrow(() -> new IllegalArgumentException("Sender not found"));
+
+    User receiver = userRepository.findByUsername(receiverUsername)
+        .orElseThrow(() -> new IllegalArgumentException("Receiver not found"));
+
+
+    // sender의 friends에 receiver를 추가
+    sender.getFriends().add(receiver);
+    // receiver의 friends에 sender를 추가
+    receiver.getFriends().add(sender);
+
+    // 친구 관계를 user 테이블에만 저장하고, 각 유저의 friends 목록은 필요하지 않음
+    userRepository.save(sender); // 친구 관계가 아닌 유저 정보만 저장
+    userRepository.save(receiver); // 친구 관계가 아닌 유저 정보만 저장
   }
 }

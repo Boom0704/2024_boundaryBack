@@ -16,4 +16,6 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
   @Query("SELECT COUNT(c) FROM Comment c WHERE c.post = :post AND c.isActive = true")
   long countActiveCommentsByPost(@Param("post") Post post);
+
+  List<Comment> findByPostAndIsActiveTrueOrderByCreatedAtAsc(Post post);
 }

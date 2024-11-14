@@ -2,6 +2,9 @@ package org.example.boundaryback.user;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import org.example.boundaryback.hashtag.Hashtag;
+import org.example.boundaryback.post.Post;
+import org.example.boundaryback.post.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,21 +16,21 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/users")
 public class UserController {
 
   private final UserService userService;
+  private final PostService postService;
   private final AuthenticationManager authenticationManager;
 
   @Autowired
-  public UserController(UserService userService, AuthenticationManager authenticationManager) {
+  public UserController(UserService userService, PostService postService, AuthenticationManager authenticationManager) {
     this.userService = userService;
+    this.postService = postService;
     this.authenticationManager = authenticationManager;
   }
 
@@ -91,6 +94,67 @@ public class UserController {
   @GetMapping("/{id}")
   public Optional<User> getUserById(@PathVariable Long id) {
     return userService.getUserById(id);
+  }
+
+  @GetMapping("/detail/{username}")
+  public ResponseEntity<Map<String, Object>> getUserByUsername(@PathVariable String username) {
+    try {
+      // 유저 기본 정보 조회
+      User user = userService.getUserByUsername(username)
+          .orElseThrow(() -> new RuntimeException("User not found"));
+
+      // 친구 목록 조회 (필요한 정보만 선택)
+      Set<User> friends = userService.getFriendsByUserId(user.getId()).stream()
+          .map(friend -> {
+            User friendInfo = new User();
+            friendInfo.setId(friend.getId());
+            friendInfo.setUsername(friend.getUsername());
+            friendInfo.setProfilePictureUrl(friend.getProfilePictureUrl());
+            return friendInfo;
+          })
+          .collect(Collectors.toSet());
+
+      // 유저가 작성한 게시글 조회 (필요한 정보만 선택)
+      // 유저가 작성한 게시글 조회 (필요한 정보만 선택)
+      List<Post> posts = postService.getPostsByUser(user);
+
+      // 게시글에서 해시태그 추출 후 빈도 계산
+      Map<String, Integer> hashtagCount = new HashMap<>();
+      for (Post post : posts) {
+        if (post.getHashtags() != null) {  // null 체크 추가
+          for (Hashtag hashtag : post.getHashtags()) {
+            String tag = hashtag.getName();
+            hashtagCount.put(tag, hashtagCount.getOrDefault(tag, 0) + 1);
+          }
+        }
+      }
+
+
+      // 게시글에서 해시태그 제외하고 필요한 정보만 정리
+      List<Post> cleanedPosts = posts.stream()
+          .map(post -> {
+            Post postInfo = new Post();
+            postInfo.setId(post.getId());
+            postInfo.setImageUrls(post.getImageUrls());  // 게시글의 이미지 URL만 전달
+            return postInfo;
+          })
+          .toList();
+
+
+      // 응답 데이터 구성
+      Map<String, Object> response = new HashMap<>();
+      response.put("user", user);  // 유저 정보 전체
+      response.put("friends", friends);  // 친구 정보 (필요한 정보만)
+      response.put("cleanedPosts", cleanedPosts);  // 게시글 정보 (id, imageUrls만)
+      response.put("hashtagCount", hashtagCount);  // 해시태그 빈도
+
+      return ResponseEntity.ok(response);
+
+    } catch (Exception e) {
+      e.printStackTrace();
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(Map.of("message", "Failed to fetch user data"));
+    }
   }
 
   // 모든 유저 조회

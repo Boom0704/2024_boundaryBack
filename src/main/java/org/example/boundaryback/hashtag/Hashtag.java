@@ -22,6 +22,7 @@ public class Hashtag {
   @Column(unique = true, nullable = false)
   private String name;
 
+  // ManyToMany 관계 설정, mappedBy를 통해 양방향 관계 설정
   @ManyToMany(mappedBy = "hashtags", fetch = FetchType.LAZY)
   private Set<Post> posts = new HashSet<>();
 
