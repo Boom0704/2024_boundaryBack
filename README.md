@@ -1,4 +1,4 @@
-# https://github.com/Boom0704/boundary
+# https://github.com/Boom0704/2024_boundary
 ### 이 프로젝트는 위 프론트와 함께 사용되기 위에 만들었습니다.
 
 
